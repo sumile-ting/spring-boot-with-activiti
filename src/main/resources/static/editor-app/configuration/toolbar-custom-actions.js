@@ -16,3 +16,24 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+'use strict';
+
+KISBPM.TOOLBAR.ACTIONS.closeEditor = function(services) {
+	
+	var modelId = EDITOR.UTIL.getParameterByName('modelId');
+	var editStatus = EDITOR.UTIL.getParameterByName('editStatus');
+	
+	if(!services.$scope.$root.hasSaved && !editStatus) {
+		services.$http({
+	        url:'/models/' + modelId,
+	        method:'delete',
+	        headers: {'Accept': 'application/json',
+	            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+		}).then(function(){
+	        window.location.href = "/model-list.html";
+	        services.$scope.$root.hasSaved = false;
+		});		
+	}else{
+		window.location.href = "/model-list.html";
+	}
+}

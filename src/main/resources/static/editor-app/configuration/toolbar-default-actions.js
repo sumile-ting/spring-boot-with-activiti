@@ -412,6 +412,8 @@ var SaveModelCtrl = [ '$rootScope', '$scope', '$http', '$route', '$location',
                 // Reset state
                 $scope.error = undefined;
                 $scope.status.loading = false;
+                
+                $scope.$root.hasSaved = true;
 
                 // Execute any callback
                 if (successCallback) {

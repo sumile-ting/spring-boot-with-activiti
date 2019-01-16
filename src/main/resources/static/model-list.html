@@ -3,13 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <title>模型管理</title>
+    <link rel="stylesheet" href="/editor-app/libs/bootstrap_3.1.1/css/bootstrap.min.css"/>
+    <style>
+    .modelFile{
+	    opacity: 0;
+	    z-index: 2;
+	    position: absolute;
+	    left: 0;
+	    height: 21px;
+	    border: none;
+	    background: transparent;
+	    cursor: pointer;
+    }
+    .v-button-wrap {
+        height: 24px;
+	    padding: 0 0 0 5px;
+	    display: inline-block;
+	    zoom: 1;
+	    text-align: center;
+	    text-decoration: none;
+	    border: 2px outset #ddd;
+	    background: #eee;
+	    cursor: pointer;
+	    white-space: nowrap;
+	    margin: 0;
+	    padding: .2em 1em;
+    }
+    </style>
 </head>
 <body>
 <div id="top">
 </div>
+<div class="left"  style="float:left; width: 30%;">
 <h2>模型列表</h2>
 <hr>
 <a href="javascript: AJAX.POST('/models/newModel')">绘制流程</a>
+<a id="importModel" href="javascript:void(0)">导入流程</a>
 <table border="1" id="model-list">
     <tr>
         <td>模型编号</td>
@@ -33,9 +62,11 @@
             <td>{{$value.version}}</td>
             <td>{{$value.createTime}}</td>
             <td>
-                <a href="/editor?modelId={{$value.id}}">编辑</a>
+                <a href="/editor?modelId={{$value.id}}&editStatus=true">编辑</a>
              <a href="javascript: AJAX.DELETE('/models/{{$value.id}}')">删除</a>
              <a href="javascript: AJAX.POST('/models/{{$value.id}}/deployment')">发布</a>
+			 <a href="javascript: show('{{$value.id}}')">查看</a>
+			<a href="/models/export/{{$value.id}}">导出</a>
             </td>
         </tr>
         {{/each}}
@@ -68,13 +99,59 @@
     {{/each}}
     </script>
 </table>
+</div>
+<div class="right" style="float:right; width: 70%;">
+	<div style="height: 700px; width: 100%; border: 1px solid #eee">
+		<img id="processImg" src="" alt="" style="max-width: 100%"></img>
+	</div>
+</div>
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+					&times;
+				</button>
+				<h4 class="modal-title" id="myModalLabel">
+					导入模型
+				</h4>
+			</div>
+			<div class="modal-body">
+				<p>选择一个包含图片信息（用于坐标定位）的文件 (.bpmn20.xml 或 .bpmn)。</p>
+				<div  >
+					<form enctype="multipart/form-data" method="post" id="importForm">
+						<div>
+							<input type="file"  name="file" class="modelFile" id="file">
+							<div tabindex="0" class="v-button" role="button">
+								<span class="v-button-wrap"><span class="v-button-caption">选择一个文件</span></span>
+							</div>
+						</div>
+					</form>
+					</div>
+			</div>
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal -->
+</div>
 <script src="/lib/js/jquery-1.10.2.min.js"></script>
+<script src="/editor-app/libs/bootstrap_3.1.1/js/bootstrap.min.js"></script>
+<script src="/lib/js/ajaxfileupload.min.js"></script>
 <script src="/lib/js/jquery.cookie.js"></script>
 <script src="/js/ajax-util.js"></script>
 <script src="/lib/js/template.js"></script>
 
 <script>
+function show(modelId) {
+	$.ajax({
+		url: "/models/show/" + modelId,
+		type: 'get',
+	}).then(function(result){
+		$("#processImg").attr('src', 'data:image/png;base64,' + result);
+	});
+}
+
+
 $(function() {
+	
     AJAX.GET("/models", null
             , function (result) {
                 var html = template("models", result);
@@ -86,6 +163,38 @@ $(function() {
                 var html = template("deployments", result);
                 $("#deployment-list").html(html);
             });
+	$("#importModel").click(function() {
+	    $( "#myModal" ).modal();
+	});
+	
+	$(".modelFile").change(function() {
+		 $.ajaxFileUpload({
+             url:"/models/import",
+             type: "POST",
+             fileElementId: "file",//对应上传标签的id,name名称
+             cache: false,
+             secureuri :false,
+             //contentType: "application/json; charset=UTF-8",
+             dataType:"json",
+             success: function (data, status) {
+                 $(".modelFile").val('');
+                 if(data.success) {
+                     $("#myModal").modal('hide');
+                     window.location.reload(true); 	 
+                 } else {
+                	 alert(data.failed || "导入失败");
+                 }
+
+             },
+             error: function (data, status, e) {
+                 $(".modelFile").val('');
+                 $("#myModal").modal('hide');
+                 alert("导入失败");
+             }
+         });
+		
+	})
+
 })
 </script>
 </body>

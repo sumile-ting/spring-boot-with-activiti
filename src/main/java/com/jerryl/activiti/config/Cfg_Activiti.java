@@ -25,8 +25,9 @@ public class Cfg_Activiti {
         SpringProcessEngineConfiguration processEngineConfiguration = new SpringProcessEngineConfiguration();
         processEngineConfiguration.setDataSource(dataSource);
         processEngineConfiguration.setDatabaseSchemaUpdate("true");
-        processEngineConfiguration.setDatabaseType("mysql");
+//        processEngineConfiguration.setDatabaseType("mysql");
 
+        processEngineConfiguration.setJdbcDriver("org.postgresql.Driver");
         processEngineConfiguration.setTransactionManager(transactionManager);
 
         //流程图字体
